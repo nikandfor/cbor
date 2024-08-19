@@ -127,7 +127,7 @@ func (r *Reader) skip(st int) (i int) {
 		switch sub {
 		case False,
 			True,
-			Nil,
+			Null,
 			Undefined,
 			Break:
 		case Float8:

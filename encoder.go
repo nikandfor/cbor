@@ -3,7 +3,9 @@ package cbor
 import "math"
 
 type (
-	Encoder struct{}
+	Encoder struct {
+		CompatibleFloat bool
+	}
 )
 
 // InsertLen inserts length l before value starting at st copying the value bytes forward if needed.
@@ -70,7 +72,7 @@ func (e Encoder) AppendTagBytes(b []byte, tag byte, s []byte) []byte {
 
 func (e Encoder) AppendInt(b []byte, v int) []byte {
 	if v < 0 {
-		return e.AppendTag64(b, Neg, uint64(-v)+1)
+		return e.AppendTag64(b, Neg, uint64(-v)-1)
 	}
 
 	return e.AppendTag64(b, Int, uint64(v))
@@ -82,7 +84,7 @@ func (e Encoder) AppendUint(b []byte, v uint) []byte {
 
 func (e Encoder) AppendInt64(b []byte, v int64) []byte {
 	if v < 0 {
-		return e.AppendTag64(b, Neg, uint64(-v)+1)
+		return e.AppendTag64(b, Neg, uint64(-v)-1)
 	}
 
 	return e.AppendTag64(b, Int, uint64(v))
@@ -92,30 +94,75 @@ func (e Encoder) AppendUint64(b []byte, v uint64) []byte {
 	return e.AppendTag64(b, Int, v)
 }
 
+func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
+	return e.AppendTag64(b, Neg, v-1)
+}
+
 func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
-	if q := int8(v); float32(q) == v {
-		return append(b, Simple|Float8, byte(q))
+	if !e.CompatibleFloat {
+		if q := int8(v); float32(q) == v {
+			return append(b, Simple|Float8, byte(q))
+		}
 	}
 
-	r := math.Float32bits(v)
-
-	return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+	return e.appendFloat32(b, v)
 }
 
 func (e Encoder) AppendFloat(b []byte, v float64) []byte {
-	if q := int8(v); float64(q) == v {
-		return append(b, Simple|Float8, byte(q))
+	if !e.CompatibleFloat {
+		if q := int8(v); float64(q) == v {
+			return append(b, Simple|Float8, byte(q))
+		}
 	}
 
-	if q := float32(v); float64(q) == v {
-		r := math.Float32bits(q)
+	q := float32(v)
 
-		return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+	if float64(q) == v || math.IsNaN(v) {
+		return e.appendFloat32(b, q)
 	}
 
 	r := math.Float64bits(v)
 
 	return append(b, Simple|Float64, byte(r>>56), byte(r>>48), byte(r>>40), byte(r>>32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+}
+
+func (e Encoder) appendFloat32(b []byte, v float32) []byte {
+	r := math.Float32bits(v)
+
+	const (
+		// 1 + 8 + 23
+		sig  = 0b1_00000000_00000000000000000000000
+		exp  = 0b0_11111111_00000000000000000000000
+		manm = 0b0_00000000_11111111111111111111111
+		manx = 0b0_00000000_11111111110000000000000
+
+		exp32 = 0b0_11111_0000000000
+	)
+
+	var r16 uint32
+
+	switch {
+	case r&^sig == 0: // zero
+		r16 = r >> 16
+	case r&exp == exp && r&manm == 0: // inf
+		r16 = r >> 16 & 0b1_11111_0000000000
+	case r&exp == exp: // nan
+		r16 = r >> 16 & 0b1_11111_0000000000
+		r16 |= r&1 | r>>22&1<<9
+	case r&manm&^manx == 0:
+		e := r&exp>>23 - 127 + 15
+		if e >= 32 {
+			break
+		}
+
+		r16 = r&sig>>16 | e<<10 | r&manx>>13
+	}
+
+	if r16 != 0 || r&^sig == 0 {
+		return append(b, Simple|Float16, byte(r16>>8), byte(r16))
+	}
+
+	return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
 func (e Encoder) AppendTag(b []byte, tag byte, v int) []byte {
@@ -158,8 +205,8 @@ func (e Encoder) AppendLabeled(b []byte, x int) []byte {
 	return e.AppendTag(b, Labeled, x)
 }
 
-func (e Encoder) AppendSimple(b []byte, x byte) []byte {
-	return append(b, Simple|x)
+func (e Encoder) AppendSimple(b []byte, x int) []byte {
+	return append(b, Simple|byte(x))
 }
 
 func (e Encoder) AppendBool(b []byte, v bool) []byte {
@@ -170,8 +217,8 @@ func (e Encoder) AppendBool(b []byte, v bool) []byte {
 	return append(b, Simple|False)
 }
 
-func (e Encoder) AppendNil(b []byte) []byte {
-	return append(b, Simple|Nil)
+func (e Encoder) AppendNull(b []byte) []byte {
+	return append(b, Simple|Null)
 }
 
 func (e Encoder) AppendUndefined(b []byte) []byte {

@@ -31,7 +31,7 @@ const (
 
 	False     = 20
 	True      = 21
-	Nil       = 22
+	Null      = 22
 	Undefined = 23
 
 	Break = 31
