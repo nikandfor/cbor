@@ -146,7 +146,7 @@ func TestFloat(tb *testing.T) {
 	var b []byte
 	var i int
 
-	e.CompatibleFloat = true
+	e.Flags = EncoderCompatible
 
 	for _, tc := range []struct {
 		Data    float64
@@ -200,7 +200,7 @@ func TestFloat(tb *testing.T) {
 
 	i = len(b)
 
-	e.CompatibleFloat = false
+	e.Flags = EncoderDefault
 
 	b = e.AppendFloat(b, 0)
 	check([]byte{0xf8, 0x0})

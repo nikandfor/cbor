@@ -4,8 +4,19 @@ import "math"
 
 type (
 	Encoder struct {
-		CompatibleFloat bool
+		Flags EncoderFlags
 	}
+
+	EncoderFlags int
+)
+
+const (
+	_ = 1 << iota
+	EncoderFloat8Int
+	EncoderFloat16
+
+	EncoderDefault    = EncoderFloat8Int
+	EncoderCompatible = EncoderFloat16
 )
 
 // InsertLen inserts length l before value starting at st copying the value bytes forward if needed.
@@ -99,7 +110,7 @@ func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
 }
 
 func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
-	if !e.CompatibleFloat {
+	if e.Flags.Is(EncoderFloat8Int) {
 		if q := int8(v); float32(q) == v {
 			return append(b, Simple|Float8, byte(q))
 		}
@@ -109,7 +120,7 @@ func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 }
 
 func (e Encoder) AppendFloat(b []byte, v float64) []byte {
-	if !e.CompatibleFloat {
+	if e.Flags.Is(EncoderFloat8Int) {
 		if q := int8(v); float64(q) == v {
 			return append(b, Simple|Float8, byte(q))
 		}
@@ -129,6 +140,16 @@ func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 func (e Encoder) appendFloat32(b []byte, v float32) []byte {
 	r := math.Float32bits(v)
 
+	if e.Flags.Is(EncoderFloat16) {
+		if b, ok := e.appendFloat16(b, r); ok {
+			return b
+		}
+	}
+
+	return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+}
+
+func (e Encoder) appendFloat16(b []byte, r uint32) ([]byte, bool) {
 	const (
 		// 1 + 8 + 23
 		sig  = 0b1_00000000_00000000000000000000000
@@ -158,11 +179,11 @@ func (e Encoder) appendFloat32(b []byte, v float32) []byte {
 		r16 = r&sig>>16 | e<<10 | r&manx>>13
 	}
 
-	if r16 != 0 || r&^sig == 0 {
-		return append(b, Simple|Float16, byte(r16>>8), byte(r16))
+	if r16 == 0 && r&^sig != 0 {
+		return b, false
 	}
 
-	return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+	return append(b, Simple|Float16, byte(r16>>8), byte(r16)), true
 }
 
 func (e Encoder) AppendTag(b []byte, tag byte, v int) []byte {
@@ -259,4 +280,8 @@ func (e Encoder) Tag64Size(v int64) int {
 	default:
 		return 1 + 8
 	}
+}
+
+func (f EncoderFlags) Is(ff EncoderFlags) bool {
+	return f&ff == ff
 }
