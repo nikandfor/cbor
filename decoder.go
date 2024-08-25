@@ -63,6 +63,12 @@ func (d Decoder) SkipTag(b []byte, st int) (tag byte, sub int64, i int) {
 	return
 }
 
+func (d Decoder) Raw(b []byte, st int) ([]byte, int) {
+	i := d.Skip(b, st)
+
+	return b[st:i], i
+}
+
 func (d Decoder) Break(b []byte, i *int) bool {
 	if b[*i] != Simple|Break {
 		return false
