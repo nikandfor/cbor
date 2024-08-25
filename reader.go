@@ -129,6 +129,7 @@ func (r *Reader) skip(st int) (i int) {
 			True,
 			Null,
 			Undefined,
+			None,
 			Break:
 		case Float8:
 			i += 1

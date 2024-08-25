@@ -221,6 +221,7 @@ func TestSimple(tb *testing.T) {
 	b = e.AppendBool(b, true)
 	b = e.AppendSimple(b, Null)
 	b = e.AppendSimple(b, Undefined)
+	b = e.AppendSimple(b, None)
 	b = e.AppendSimple(b, 16)
 
 	if !bytes.Equal([]byte{
@@ -228,6 +229,7 @@ func TestSimple(tb *testing.T) {
 		0xf5,
 		0xf6,
 		0xf7,
+		0xe0,
 		0xf0,
 	}, b) {
 		tb.Errorf("% 02x", b)
@@ -245,6 +247,7 @@ func TestSimple(tb *testing.T) {
 		{Simple: True},
 		{Simple: Null},
 		{Simple: Undefined},
+		{Simple: None},
 		{Simple: 16},
 	} {
 		tag, arg, i = d.Tag(b, i)

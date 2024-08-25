@@ -35,10 +35,8 @@ func (e Encoder) InsertLen(b []byte, tag byte, st, l int) []byte {
 		panic(l)
 	}
 
-	b[st-1] &= TagMask
-
 	if l < Len1 {
-		b[st-1] |= byte(l)
+		b[st-1] = tag | byte(l)
 
 		return b
 	}
@@ -244,6 +242,10 @@ func (e Encoder) AppendNull(b []byte) []byte {
 
 func (e Encoder) AppendUndefined(b []byte) []byte {
 	return append(b, Simple|Undefined)
+}
+
+func (e Encoder) AppendNone(b []byte) []byte {
+	return append(b, Simple|None)
 }
 
 func (e Encoder) AppendBreak(b []byte) []byte {

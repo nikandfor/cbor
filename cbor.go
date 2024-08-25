@@ -34,6 +34,8 @@ const (
 	Null      = 22
 	Undefined = 23
 
+	None = 0
+
 	Break = 31
 )
 
