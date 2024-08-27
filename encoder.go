@@ -24,29 +24,32 @@ const (
 // You first expect lenth to take one byte, encodes the value
 // and then inserts length moving the value if encoded length size exceeds one byte.
 //
-//	b = e.AppendTag(b, tag, 0)
+//	expectedLen := 0
+//	b = e.AppendTag(b, tag, expectedLen)
 //	st := len(b)
 //	b = append(b, ...) // arbitrary value of arbitrary size
 //	l := len(b) - st // for string or bytes
 //	// or l = array/map length
-//	b = e.InsertLen(b, tag, st, l)
-func (e Encoder) InsertLen(b []byte, tag byte, st, l int) []byte {
+//	b = e.InsertLen(b, tag, st, expectedLen, l)
+func (e Encoder) InsertLen(b []byte, tag byte, st, l0, l int) []byte {
 	if l < 0 {
 		panic(l)
 	}
 
-	if l < Len1 {
-		b[st-1] = tag | byte(l)
+	sz0 := e.TagSize(l0)
+	sz := e.TagSize(l)
+	newst := st - sz0 + sz
 
-		return b
+	if sz > sz0 {
+		b = append(b, "        "[:sz-sz0]...)
 	}
 
-	sz := e.TagSize(l) - 1
+	if sz != sz0 {
+		copy(b[newst:], b[st:])
+		b = b[:newst+l]
+	}
 
-	b = append(b, "        "[:sz]...)
-	copy(b[st+sz:], b[st:])
-
-	_ = e.AppendTag(b[:st-1], tag, l)
+	_ = e.AppendTag(b[:newst-sz], tag, l)
 
 	return b
 }
