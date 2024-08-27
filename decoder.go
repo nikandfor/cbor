@@ -54,7 +54,7 @@ func (d Decoder) SkipTag(b []byte, st int) (tag byte, sub int64, i int) {
 			i += 1 << (int(sub) - Float8)
 		}
 
-		if sub < Len1 {
+		if sub <= Float64 {
 			break
 		}
 
