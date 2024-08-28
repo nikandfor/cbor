@@ -1,6 +1,9 @@
 package cbor
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestDecoder(tb *testing.T) {
 	var d Decoder
@@ -11,7 +14,7 @@ func TestDecoder(tb *testing.T) {
 	if i >= 0 {
 		tb.Errorf("tag %x %x  i %d", tag, arg, i)
 	} else {
-		tb.Logf("err: %v", Error(i))
+		tb.Logf("got expected err: %v", Error(i))
 	}
 }
 
@@ -24,7 +27,7 @@ func TestDecoderSkipNeg(tb *testing.T) {
 
 	st := 0x5
 	tag, sub, i := d.SkipTag(b, st)
-	if tag != Simple || sub != Float32 || i != st+5 {
+	if tag != Simple || math.Float32frombits(uint32(sub)) != 1 /* sub != 0x3f800000 */ || i != st+5 {
 		tb.Errorf("%x -> %x %x %x", st, tag, sub, i)
 	}
 }

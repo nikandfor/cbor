@@ -4,19 +4,19 @@ import "math"
 
 type (
 	Encoder struct {
-		Flags EncoderFlags
+		Flags FeatureFlags
 	}
 
-	EncoderFlags int
+	FeatureFlags int
 )
 
 const (
 	_ = 1 << iota
-	EncoderFloat8Int
-	EncoderFloat16
+	FtFloat8Int
+	FtFloat16
 
-	EncoderDefault    = EncoderFloat8Int
-	EncoderCompatible = EncoderFloat16
+	FtDefault    = FtFloat8Int
+	FtCompatible = FtFloat16
 )
 
 // InsertLen inserts length l before value starting at st copying the value bytes forward if needed.
@@ -111,7 +111,7 @@ func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
 }
 
 func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
-	if e.Flags.Is(EncoderFloat8Int) {
+	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float32(q) == v {
 			return append(b, Simple|Float8, byte(q))
 		}
@@ -121,7 +121,7 @@ func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 }
 
 func (e Encoder) AppendFloat(b []byte, v float64) []byte {
-	if e.Flags.Is(EncoderFloat8Int) {
+	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float64(q) == v {
 			return append(b, Simple|Float8, byte(q))
 		}
@@ -141,7 +141,7 @@ func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 func (e Encoder) appendFloat32(b []byte, v float32) []byte {
 	r := math.Float32bits(v)
 
-	if e.Flags.Is(EncoderFloat16) {
+	if e.Flags.Is(FtFloat16) {
 		if b, ok := e.appendFloat16(b, r); ok {
 			return b
 		}
@@ -287,6 +287,6 @@ func (e Encoder) Tag64Size(v int64) int {
 	}
 }
 
-func (f EncoderFlags) Is(ff EncoderFlags) bool {
+func (f FeatureFlags) Is(ff FeatureFlags) bool {
 	return f&ff == ff
 }
