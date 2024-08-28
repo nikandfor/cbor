@@ -78,29 +78,53 @@ func (d Decoder) Tag(b []byte, st int) (tag byte, sub int64, i int) {
 	sub = int64(b[i] & SubMask)
 	i++
 
+	if tag == Simple {
+		if sub >= Float8 && sub <= Float64 {
+			i += 1 << (sub - Float8)
+		}
+
+		return tag, sub, i
+	}
+
 	switch {
 	case sub < Len1:
 		// we are ok
 	case sub == LenBreak:
 		sub = -1
 	case sub == Len1:
-		sub = int64(b[i])
+		sub = int64(d.u8(b, i))
 		i++
 	case sub == Len2:
-		sub = int64(b[i])<<8 | int64(b[i+1])
+		sub = int64(d.u16(b, i))
 		i += 2
 	case sub == Len4:
-		sub = int64(b[i])<<24 | int64(b[i+1])<<16 | int64(b[i+2])<<8 | int64(b[i+3])
+		sub = int64(d.u32(b, i))
 		i += 4
 	case sub == Len8:
-		sub = int64(b[i])<<56 | int64(b[i+1])<<48 | int64(b[i+2])<<40 | int64(b[i+3])<<32 |
-			int64(b[i+4])<<24 | int64(b[i+5])<<16 | int64(b[i+6])<<8 | int64(b[i+7])
+		sub = int64(d.u64(b, i))
 		i += 8
 	default:
 		return tag, sub, newError(ErrMalformed, st)
 	}
 
 	return
+}
+
+func (d Decoder) u8(b []byte, i int) uint64 {
+	return uint64(b[i])
+}
+
+func (d Decoder) u16(b []byte, i int) uint64 {
+	return uint64(b[i])<<8 | uint64(b[i+1])
+}
+
+func (d Decoder) u32(b []byte, i int) uint64 {
+	return uint64(b[i])<<24 | uint64(b[i+1])<<16 | uint64(b[i+2])<<8 | uint64(b[i+3])
+}
+
+func (d Decoder) u64(b []byte, i int) uint64 {
+	return uint64(b[i])<<56 | uint64(b[i+1])<<48 | uint64(b[i+2])<<40 | uint64(b[i+3])<<32 |
+		uint64(b[i+4])<<24 | uint64(b[i+5])<<16 | uint64(b[i+6])<<8 | uint64(b[i+7])
 }
 
 func (d Decoder) Signed(b []byte, st int) (v int64, i int) {
@@ -122,39 +146,51 @@ func (d Decoder) Unsigned(b []byte, st int) (v uint64, i int) {
 }
 
 func (d Decoder) Float32(b []byte, st int) (v float32, i int) {
-	_, x, i := d.Tag(b, st)
-	sub := b[st] & SubMask
+	i = st
+
+	sub := b[i] & SubMask
+	i++
 
 	switch sub {
 	case Float8:
-		return float32(x), i
+		v = float32(d.u8(b, i))
+		i++
 	case Float16:
-		return d.float16(b, st+1), i
+		v = d.float16(b, i)
+		i += 2
 	case Float32:
-		return math.Float32frombits(uint32(x)), i
+		v = math.Float32frombits(uint32(d.u32(b, i)))
+		i += 4
 	case Float64:
-		return 0, newError(ErrOverflow, st)
-	default:
-		return 0, newError(ErrMalformed, st)
+		v = float32(math.Float64frombits(d.u64(b, i)))
+		i += 8
 	}
+
+	return v, i
 }
 
 func (d Decoder) Float(b []byte, st int) (v float64, i int) {
-	_, x, i := d.Tag(b, st)
-	sub := b[st] & SubMask
+	i = st
+
+	sub := b[i] & SubMask
+	i++
 
 	switch sub {
 	case Float8:
-		return float64(x), i
+		v = float64(d.u8(b, i))
+		i++
 	case Float16:
-		return float64(d.float16(b, st+1)), i
+		v = float64(d.float16(b, i))
+		i += 2
 	case Float32:
-		return float64(math.Float32frombits(uint32(x))), i
+		v = float64(math.Float32frombits(uint32(d.u32(b, i))))
+		i += 4
 	case Float64:
-		return math.Float64frombits(uint64(x)), i
-	default:
-		return 0, newError(ErrMalformed, st)
+		v = math.Float64frombits(d.u64(b, i))
+		i += 8
 	}
+
+	return v, i
 }
 
 func (d Decoder) float16(b []byte, i int) float32 {

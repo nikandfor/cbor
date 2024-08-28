@@ -1,7 +1,6 @@
 package cbor
 
 import (
-	"math"
 	"testing"
 )
 
@@ -27,7 +26,7 @@ func TestDecoderSkipNeg(tb *testing.T) {
 
 	st := 0x5
 	tag, sub, i := d.SkipTag(b, st)
-	if tag != Simple || math.Float32frombits(uint32(sub)) != 1 /* sub != 0x3f800000 */ || i != st+5 {
+	if tag != Simple || sub != Float32 || i != st+5 {
 		tb.Errorf("%x -> %x %x %x", st, tag, sub, i)
 	}
 }

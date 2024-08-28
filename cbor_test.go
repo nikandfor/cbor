@@ -175,11 +175,17 @@ func TestFloat(tb *testing.T) {
 			tb.Errorf("%T(%#24[1]v) -> % #x, wanted % #x", tc.Data, b, tc.Encoded)
 		}
 
-		var dec float64
-		dec, i = d.Float(b, i)
-		if i != len(b) || dec != tc.Data && !math.IsNaN(dec) && !math.IsNaN(tc.Data) {
-			tb.Errorf("%T(%#24[1]v) -> %# x -> %#24v, i %#x / %#x", tc.Data, b[i:], dec, i, len(b))
+		dec32, end := d.Float32(b, i)
+		if end != len(b) || dec32 != float32(tc.Data) && !math.IsNaN(float64(dec32)) && !math.IsNaN(tc.Data) {
+			tb.Errorf("%T(%#24[1]v) -> %# x -> %#24v, i %#x / %#x", tc.Data, b[i:], dec32, end, len(b))
 		}
+
+		dec, end := d.Float(b, i)
+		if end != len(b) || dec != tc.Data && !math.IsNaN(dec) && !math.IsNaN(tc.Data) {
+			tb.Errorf("%T(%#24[1]v) -> %# x -> %#24v, i %#x / %#x", tc.Data, b[i:], dec, end, len(b))
+		}
+
+		i = end
 	}
 
 	b = append(b[:0], 0, 1)

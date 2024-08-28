@@ -232,11 +232,15 @@ func (e Encoder) AppendSimple(b []byte, x int) []byte {
 }
 
 func (e Encoder) AppendBool(b []byte, v bool) []byte {
+	var x byte
+
 	if v {
-		return append(b, Simple|True)
+		x = Simple | True
+	} else {
+		x = Simple | False
 	}
 
-	return append(b, Simple|False)
+	return append(b, x)
 }
 
 func (e Encoder) AppendNull(b []byte) []byte {
