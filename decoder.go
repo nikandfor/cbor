@@ -131,6 +131,7 @@ func (d Decoder) Signed(b []byte, st int) (v int64, i int) {
 	tag, v, i := d.Tag(b, st)
 	if tag == Neg {
 		v++
+		v = -v
 	}
 
 	return v, i

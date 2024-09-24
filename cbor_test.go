@@ -96,18 +96,25 @@ func TestNeg(tb *testing.T) {
 		{1_000, []byte{0x39, 0x03, 0xe7}},
 		{18446744073709551615, []byte{0x3b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe}},
 	} {
-		var dec int64
+		var decu uint64
+		var decs int64
+		var j int
 
 		if tc.Data <= -math.MinInt {
 			b = e.AppendInt(b, int(-tc.Data))
 
 			if !bytes.Equal(b[i:], tc.Encoded) {
-				tb.Errorf("%T(%[1]d) -> % #x, wanted %d", tc.Data, b, tc.Encoded)
+				tb.Errorf("%T(%[1]d) -> % #x, wanted %d", -tc.Data, b, tc.Encoded)
 			}
 
-			dec, i = d.Signed(b, i)
-			if i != len(b) || int(dec) != int(tc.Data) {
-				tb.Errorf("%d -> %d,  i %#x / %#x", tc.Data, dec, i, len(b))
+			decu, j = d.Unsigned(b, i)
+			if j != len(b) || int(decu) != int(tc.Data) {
+				tb.Errorf("-%d -> -%d,  i %#x / %#x", tc.Data, decu, j, len(b))
+			}
+
+			decs, i = d.Signed(b, i)
+			if i != len(b) || int(decs) != -int(tc.Data) {
+				tb.Errorf("-%d -> %d,  i %#x / %#x", tc.Data, decs, i, len(b))
 			}
 		}
 
@@ -115,12 +122,17 @@ func TestNeg(tb *testing.T) {
 			b = e.AppendInt64(b, int64(-tc.Data))
 
 			if !bytes.Equal(b[i:], tc.Encoded) {
-				tb.Errorf("%T(%#[1]v) -> % #x, wanted %#x", tc.Data, b, tc.Encoded)
+				tb.Errorf("%T(%#[1]v) -> % #x, wanted %#x", -tc.Data, b, tc.Encoded)
 			}
 
-			dec, i = d.Signed(b, i)
-			if i != len(b) || dec != int64(tc.Data) {
-				tb.Errorf("%d -> %d,  i %#x / %#x", tc.Data, dec, i, len(b))
+			decu, j = d.Unsigned(b, i)
+			if j != len(b) || int64(decu) != int64(tc.Data) {
+				tb.Errorf("-%d -> -%d,  i %#x / %#x", tc.Data, decu, j, len(b))
+			}
+
+			decs, i = d.Signed(b, i)
+			if i != len(b) || decs != -int64(tc.Data) {
+				tb.Errorf("-%d -> %d,  i %#x / %#x", tc.Data, decs, i, len(b))
 			}
 		}
 
@@ -128,13 +140,12 @@ func TestNeg(tb *testing.T) {
 			b = e.AppendNegUint64(b, tc.Data)
 
 			if !bytes.Equal(b[i:], tc.Encoded) {
-				tb.Errorf("%T(%#[1]v) -> % #x, wanted %#x", tc.Data, b, tc.Encoded)
+				tb.Errorf("%T(%#[1]v) -> % #x, wanted %#x", -tc.Data, b, tc.Encoded)
 			}
 
-			var dec uint64
-			dec, i = d.Unsigned(b, i)
-			if i != len(b) || dec != tc.Data {
-				tb.Errorf("%d -> %d, i %#x / %#x", tc.Data, dec, i, len(b))
+			decu, i = d.Unsigned(b, i)
+			if i != len(b) || decu != tc.Data {
+				tb.Errorf("%d -> %d, i %#x / %#x", -tc.Data, -decu, i, len(b))
 			}
 		}
 	}
