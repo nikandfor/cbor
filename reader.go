@@ -104,7 +104,7 @@ func (r *Reader) skip(st int) (i int) {
 			if i == len(r.b) {
 				return r.newError(ErrUnexpectedEOF, i)
 			}
-			if sub == -1 && r.b[i] == Simple|Break {
+			if sub == -1 && r.b[i] == byte(Simple|Break) {
 				i++
 				break
 			}
@@ -178,14 +178,14 @@ func (r *Reader) more() (err error) {
 	return err
 }
 
-func readTag(b []byte, st int) (tag byte, sub int64, i int) {
+func readTag(b []byte, st int) (tag Tag, sub int64, i int) {
 	if st >= len(b) {
 		return tag, sub, -ErrUnexpectedEOF
 	}
 
 	i = st
 
-	tag = b[i] & TagMask
+	tag = Tag(b[i]) & TagMask
 	sub = int64(b[i] & SubMask)
 	i++
 

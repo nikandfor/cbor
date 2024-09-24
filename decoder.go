@@ -13,7 +13,7 @@ func (d Decoder) Skip(b []byte, st int) (i int) {
 	return
 }
 
-func (d Decoder) SkipTag(b []byte, st int) (tag byte, sub int64, i int) {
+func (d Decoder) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
 	tag, sub, i = d.Tag(b, st)
 
 	//	println(fmt.Sprintf("Skip %x  tag %x %x  i %x  data % x", st, tag, sub, i, b[st:]))
@@ -52,7 +52,7 @@ func (d Decoder) Raw(b []byte, st int) ([]byte, int) {
 }
 
 func (d Decoder) Break(b []byte, i *int) bool {
-	if b[*i] != Simple|Break {
+	if Tag(b[*i]) != Simple|Break {
 		return false
 	}
 
@@ -67,14 +67,14 @@ func (d Decoder) Bytes(b []byte, st int) (v []byte, i int) {
 	return b[i : i+int(l)], i + int(l)
 }
 
-func (d Decoder) TagOnly(b []byte, st int) (tag byte) {
-	return b[st] & TagMask
+func (d Decoder) TagOnly(b []byte, st int) (tag Tag) {
+	return Tag(b[st]) & TagMask
 }
 
-func (d Decoder) Tag(b []byte, st int) (tag byte, sub int64, i int) {
+func (d Decoder) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
 	i = st
 
-	tag = b[i] & TagMask
+	tag = Tag(b[i]) & TagMask
 	sub = int64(b[i] & SubMask)
 	i++
 

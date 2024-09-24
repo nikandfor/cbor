@@ -31,7 +31,7 @@ const (
 //	l := len(b) - st // for string or bytes
 //	// or l = array/map length
 //	b = e.InsertLen(b, tag, st, expectedLen, l)
-func (e Encoder) InsertLen(b []byte, tag byte, st, l0, l int) []byte {
+func (e Encoder) InsertLen(b []byte, tag Tag, st, l0, l int) []byte {
 	if l < 0 {
 		panic(l)
 	}
@@ -72,12 +72,12 @@ func (e Encoder) AppendBytes(b, s []byte) []byte {
 	return append(b, s...)
 }
 
-func (e Encoder) AppendTagString(b []byte, tag byte, s string) []byte {
+func (e Encoder) AppendTagString(b []byte, tag Tag, s string) []byte {
 	b = e.AppendTag(b, tag, len(s))
 	return append(b, s...)
 }
 
-func (e Encoder) AppendTagBytes(b []byte, tag byte, s []byte) []byte {
+func (e Encoder) AppendTagBytes(b []byte, tag Tag, s []byte) []byte {
 	b = e.AppendTag(b, tag, len(s))
 	return append(b, s...)
 }
@@ -113,7 +113,7 @@ func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
 func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float32(q) == v {
-			return append(b, Simple|Float8, byte(q))
+			return append(b, byte(Simple|Float8), byte(q))
 		}
 	}
 
@@ -123,7 +123,7 @@ func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float64(q) == v {
-			return append(b, Simple|Float8, byte(q))
+			return append(b, byte(Simple|Float8), byte(q))
 		}
 	}
 
@@ -135,7 +135,7 @@ func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 
 	r := math.Float64bits(v)
 
-	return append(b, Simple|Float64, byte(r>>56), byte(r>>48), byte(r>>40), byte(r>>32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+	return append(b, byte(Simple|Float64), byte(r>>56), byte(r>>48), byte(r>>40), byte(r>>32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
 func (e Encoder) appendFloat32(b []byte, v float32) []byte {
@@ -147,7 +147,7 @@ func (e Encoder) appendFloat32(b []byte, v float32) []byte {
 		}
 	}
 
-	return append(b, Simple|Float32, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
+	return append(b, byte(Simple|Float32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
 func (e Encoder) appendFloat16(b []byte, r uint32) ([]byte, bool) {
@@ -184,43 +184,43 @@ func (e Encoder) appendFloat16(b []byte, r uint32) ([]byte, bool) {
 		return b, false
 	}
 
-	return append(b, Simple|Float16, byte(r16>>8), byte(r16)), true
+	return append(b, byte(Simple|Float16), byte(r16>>8), byte(r16)), true
 }
 
-func (e Encoder) AppendTag(b []byte, tag byte, v int) []byte {
+func (e Encoder) AppendTag(b []byte, tag Tag, v int) []byte {
 	switch {
 	case v == -1:
-		return append(b, tag|LenBreak)
+		return append(b, byte(tag|LenBreak))
 	case v < Len1:
-		return append(b, tag|byte(v))
+		return append(b, byte(tag)|byte(v))
 	case v <= 0xff:
-		return append(b, tag|Len1, byte(v))
+		return append(b, byte(tag|Len1), byte(v))
 	case v <= 0xffff:
-		return append(b, tag|Len2, byte(v>>8), byte(v))
+		return append(b, byte(tag|Len2), byte(v>>8), byte(v))
 	case v <= 0xffff_ffff:
-		return append(b, tag|Len4, byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+		return append(b, byte(tag|Len4), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 	default:
-		return append(b, tag|Len8, byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+		return append(b, byte(tag|Len8), byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 	}
 }
 
-func (e Encoder) AppendTag64(b []byte, tag byte, v uint64) []byte {
+func (e Encoder) AppendTag64(b []byte, tag Tag, v uint64) []byte {
 	switch {
 	case v < Len1:
-		return append(b, tag|byte(v))
+		return append(b, byte(tag)|byte(v))
 	case v <= 0xff:
-		return append(b, tag|Len1, byte(v))
+		return append(b, byte(tag|Len1), byte(v))
 	case v <= 0xffff:
-		return append(b, tag|Len2, byte(v>>8), byte(v))
+		return append(b, byte(tag|Len2), byte(v>>8), byte(v))
 	case v <= 0xffff_ffff:
-		return append(b, tag|Len4, byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+		return append(b, byte(tag|Len4), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 	default:
-		return append(b, tag|Len8, byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+		return append(b, byte(tag|Len8), byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 	}
 }
 
-func (e Encoder) AppendTagBreak(b []byte, tag byte) []byte {
-	return append(b, tag|LenBreak)
+func (e Encoder) AppendTagBreak(b []byte, tag Tag) []byte {
+	return append(b, byte(tag|LenBreak))
 }
 
 func (e Encoder) AppendLabeled(b []byte, x int) []byte {
@@ -228,11 +228,11 @@ func (e Encoder) AppendLabeled(b []byte, x int) []byte {
 }
 
 func (e Encoder) AppendSimple(b []byte, x int) []byte {
-	return append(b, Simple|byte(x))
+	return append(b, byte(Simple)|byte(x))
 }
 
 func (e Encoder) AppendBool(b []byte, v bool) []byte {
-	var x byte
+	var x Tag
 
 	if v {
 		x = Simple | True
@@ -240,23 +240,23 @@ func (e Encoder) AppendBool(b []byte, v bool) []byte {
 		x = Simple | False
 	}
 
-	return append(b, x)
+	return append(b, byte(x))
 }
 
 func (e Encoder) AppendNull(b []byte) []byte {
-	return append(b, Simple|Null)
+	return append(b, byte(Simple|Null))
 }
 
 func (e Encoder) AppendUndefined(b []byte) []byte {
-	return append(b, Simple|Undefined)
+	return append(b, byte(Simple|Undefined))
 }
 
 func (e Encoder) AppendNone(b []byte) []byte {
-	return append(b, Simple|None)
+	return append(b, byte(Simple|None))
 }
 
 func (e Encoder) AppendBreak(b []byte) []byte {
-	return append(b, Simple|Break)
+	return append(b, byte(Simple|Break))
 }
 
 func (e Encoder) TagSize(v int) int {

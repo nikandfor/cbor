@@ -1,7 +1,16 @@
 package cbor
 
+type (
+	Tag byte
+
+	Message struct {
+		b    []byte
+		root int
+	}
+)
+
 const (
-	Int = iota << 5
+	Int Tag = iota << 5
 	Neg
 	Bytes
 	String
@@ -24,26 +33,17 @@ const (
 )
 
 const (
-	Float8 = 24 + iota
+	False = 20 + iota
+	True
+	Null
+	Undefined
+
+	Float8
 	Float16
 	Float32
 	Float64
 
-	False     = 20
-	True      = 21
-	Null      = 22
-	Undefined = 23
-
 	None = 0
 
 	Break = 31
-)
-
-type (
-	Tag = byte
-
-	Message struct {
-		b    []byte
-		root int
-	}
 )

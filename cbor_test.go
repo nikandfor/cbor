@@ -241,7 +241,7 @@ func TestSimple(tb *testing.T) {
 		tb.Errorf("% 02x", b)
 	}
 
-	var tag byte
+	var tag Tag
 	var arg int64
 
 	i := 0
@@ -274,7 +274,7 @@ func TestString(tb *testing.T) {
 	var i int
 
 	for _, tc := range []struct {
-		Tag     byte
+		Tag     Tag
 		Data    string
 		Encoded []byte
 	}{
@@ -310,7 +310,7 @@ func TestArray(tb *testing.T) {
 	var arr []byte
 
 	check := func() {
-		var tag byte
+		var tag Tag
 		var l int64
 
 		tag, l, i = d.Tag(b, i)
