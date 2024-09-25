@@ -47,3 +47,16 @@ const (
 
 	Break = 31
 )
+
+func IsNum(raw Tag) bool {
+	return IsInt(raw) || IsFloat(raw)
+}
+
+func IsInt(tag Tag) bool {
+	t := tag & TagMask
+	return t == Int || t == Neg
+}
+
+func IsFloat(raw Tag) bool {
+	return raw >= Simple|Float8 && raw <= Simple|Float64
+}

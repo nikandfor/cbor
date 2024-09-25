@@ -73,6 +73,10 @@ func (d Decoder) TagOnly(b []byte, st int) (tag Tag) {
 	return Tag(b[st]) & TagMask
 }
 
+func (d Decoder) TagRaw(b []byte, st int) (tag Tag) {
+	return Tag(b[st])
+}
+
 func (d Decoder) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
 	i = st
 
