@@ -11,13 +11,15 @@ type (
 )
 
 const (
-	_ = 1 << iota
+	_ FeatureFlags = 1 << iota
 	FtFloat8Int
 	FtFloat16
 
 	FtDefault    = FtFloat8Int
 	FtCompatible = FtFloat16
 )
+
+func MakeEncoder() Encoder { return Encoder{Flags: FtDefault} }
 
 // InsertLen inserts length l before value starting at st copying the value bytes forward if needed.
 // It's needed to encode the value of unknown size.
@@ -127,9 +129,7 @@ func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 		}
 	}
 
-	q := float32(v)
-
-	if float64(q) == v || math.IsNaN(v) {
+	if q := float32(v); float64(q) == v || math.IsNaN(v) {
 		return e.appendFloat32(b, q)
 	}
 

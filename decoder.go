@@ -8,6 +8,8 @@ type (
 	}
 )
 
+func MakeDecoder() Decoder { return Decoder{Flags: FtDefault} }
+
 func (d Decoder) Skip(b []byte, st int) (i int) {
 	_, _, i = d.SkipTag(b, st)
 	return
