@@ -112,6 +112,14 @@ func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
 	return e.AppendTag64(b, Neg, v-1)
 }
 
+func (e Encoder) AppendTagUnsigned(b []byte, tag Tag, v uint64) []byte {
+	if tag == Neg {
+		return e.AppendTag64(b, Neg, v-1)
+	} else {
+		return e.AppendTag64(b, Int, v)
+	}
+}
+
 func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float32(q) == v {
