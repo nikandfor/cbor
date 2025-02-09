@@ -75,7 +75,7 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 
 			w, i = dump(w, r, i, depth+1)
 		}
-	case Labeled:
+	case Label:
 		w = fmt.Appendf(w, "% x\n", r[st:i])
 		w, i = dump(w, r, i, depth+1)
 	case Simple:

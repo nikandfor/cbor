@@ -16,7 +16,7 @@ const (
 	String
 	Array
 	Map
-	Labeled
+	Label
 	Simple
 
 	TagMask = 0b1110_0000

@@ -1,6 +1,8 @@
 package cbor
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Error int
 
@@ -11,19 +13,22 @@ const (
 	ErrUnexpectedEOF
 	ErrOverflow
 
-	errorMask       = 0xff
-	errorIndexShift = 8
+	codeWidth = 4
+	codeMask  = 1<<codeWidth - 1
+	errorMask = int(^uint(0) >> 1)
 )
 
 var errStrings = []string{
-	"",
+	"ok",
 	"short buffer",
 	"malformed",
 	"unexpected eof",
 }
 
 func newError(code, index int) int {
-	return -(index<<errorIndexShift | code)
+	idx := index << codeWidth
+
+	return -(idx&errorMask | code&codeMask)
 }
 
 func (e Error) Error() string {
@@ -35,7 +40,7 @@ func (e Error) Code() int {
 		return 0
 	}
 
-	return int(-e & errorMask)
+	return int(-e & codeMask)
 }
 
 func (e Error) Index() int {
@@ -43,7 +48,7 @@ func (e Error) Index() int {
 		return int(e)
 	}
 
-	return int(-e >> errorIndexShift)
+	return int(-e >> codeWidth)
 }
 
 func (e Error) CodeIndex() (code, index int) {

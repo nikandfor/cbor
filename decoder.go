@@ -39,7 +39,7 @@ func (d Decoder) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
 
 			i = d.Skip(b, i)
 		}
-	case Labeled:
+	case Label:
 		i = d.Skip(b, i)
 	case Simple:
 	}
@@ -67,6 +67,11 @@ func (d Decoder) Bytes(b []byte, st int) (v []byte, i int) {
 	_, l, i := d.Tag(b, st)
 
 	return b[i : i+int(l)], i + int(l)
+}
+
+func (d Decoder) Label(b []byte, st int) (lab, i int) {
+	_, sub, i := d.Tag(b, st)
+	return int(sub), i
 }
 
 func (d Decoder) TagOnly(b []byte, st int) (tag Tag) {

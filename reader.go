@@ -121,7 +121,7 @@ func (r *Reader) skip(st int) (i int) {
 				return i
 			}
 		}
-	case Labeled:
+	case Label:
 		return r.skip(i)
 	case Simple:
 		switch sub {

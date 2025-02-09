@@ -231,8 +231,8 @@ func (e Encoder) AppendTagBreak(b []byte, tag Tag) []byte {
 	return append(b, byte(tag|LenBreak))
 }
 
-func (e Encoder) AppendLabeled(b []byte, x int) []byte {
-	return e.AppendTag(b, Labeled, x)
+func (e Encoder) AppendLabel(b []byte, x int) []byte {
+	return e.AppendTag(b, Label, x)
 }
 
 func (e Encoder) AppendSimple(b []byte, x int) []byte {

@@ -584,22 +584,22 @@ func TestLabeled(tb *testing.T) {
 		i = len(b)
 	}
 
-	b = e.AppendLabeled(b, 0)
+	b = e.AppendLabel(b, 0)
 	b = e.AppendString(b, "abcd")
 
 	check([]byte{0xc0, 0x64, 'a', 'b', 'c', 'd'})
 
-	b = e.AppendLabeled(b, 23)
+	b = e.AppendLabel(b, 23)
 	b = append(b, 1)
 
 	check([]byte{0xd7, 1})
 
-	b = e.AppendLabeled(b, 24)
+	b = e.AppendLabel(b, 24)
 	b = append(b, 1)
 
 	check([]byte{0xd8, 24, 1})
 
-	b = e.AppendLabeled(b, 32)
+	b = e.AppendLabel(b, 32)
 	b = append(b, 1)
 
 	check([]byte{0xd8, 32, 1})

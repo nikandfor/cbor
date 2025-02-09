@@ -14,7 +14,7 @@ func TestDump(tb *testing.T) {
 
 	b = e.AppendMap(b, 1)
 	b = e.AppendTagString(b, Bytes, "bytes")
-	b = e.AppendTagString(b, String, "bytes")
+	b = e.AppendTagString(b, String, "string")
 
 	b = e.AppendTag(b, String, -1)
 	b = e.AppendString(b, "first")
