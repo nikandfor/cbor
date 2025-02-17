@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestDecoder(tb *testing.T) {
+func TestIterator(tb *testing.T) {
 	var d Iterator
 
 	b := []byte{byte(Int) | 30, 0, 0, 0}
@@ -17,7 +17,7 @@ func TestDecoder(tb *testing.T) {
 	}
 }
 
-func TestDecoderSkipNeg(tb *testing.T) {
+func TestIteratorSkipNeg(tb *testing.T) {
 	b := []byte{
 		0x72, 0x74, 0x79, 0x05, 0x24, 0xfa, 0x3f, 0x80, 0x00, 0x00, 0xfa, 0xbf, 0x80, 0x00, 0x00, 0x8d,
 	}

@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestEncoderInsertLen(tb *testing.T) {
-	var e Encoder
+func TestEmitterInsertLen(tb *testing.T) {
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int

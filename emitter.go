@@ -3,7 +3,7 @@ package cbor
 import "math"
 
 type (
-	Encoder struct {
+	Emitter struct {
 		Flags FeatureFlags
 	}
 
@@ -19,7 +19,7 @@ const (
 	FtCompatible = FtFloat16
 )
 
-func MakeEncoder() Encoder { return Encoder{Flags: FtDefault} }
+func MakeEmitter() Emitter { return Emitter{Flags: FtDefault} }
 
 // InsertLen inserts length l before value starting at st copying the value bytes forward if needed.
 // It's needed to encode the value of unknown size.
@@ -33,7 +33,7 @@ func MakeEncoder() Encoder { return Encoder{Flags: FtDefault} }
 //	l := len(b) - st // for string or bytes
 //	// or l = array/map length
 //	b = e.InsertLen(b, tag, st, expectedLen, l)
-func (e Encoder) InsertLen(b []byte, tag Tag, st, l0, l int) []byte {
+func (e Emitter) InsertLen(b []byte, tag Tag, st, l0, l int) []byte {
 	if l < 0 {
 		panic(l)
 	}
@@ -56,35 +56,35 @@ func (e Encoder) InsertLen(b []byte, tag Tag, st, l0, l int) []byte {
 	return b
 }
 
-func (e Encoder) AppendMap(b []byte, l int) []byte {
+func (e Emitter) AppendMap(b []byte, l int) []byte {
 	return e.AppendTag(b, Map, l)
 }
 
-func (e Encoder) AppendArray(b []byte, l int) []byte {
+func (e Emitter) AppendArray(b []byte, l int) []byte {
 	return e.AppendTag(b, Array, l)
 }
 
-func (e Encoder) AppendString(b []byte, s string) []byte {
+func (e Emitter) AppendString(b []byte, s string) []byte {
 	b = e.AppendTag(b, String, len(s))
 	return append(b, s...)
 }
 
-func (e Encoder) AppendBytes(b, s []byte) []byte {
+func (e Emitter) AppendBytes(b, s []byte) []byte {
 	b = e.AppendTag(b, Bytes, len(s))
 	return append(b, s...)
 }
 
-func (e Encoder) AppendTagString(b []byte, tag Tag, s string) []byte {
+func (e Emitter) AppendTagString(b []byte, tag Tag, s string) []byte {
 	b = e.AppendTag(b, tag, len(s))
 	return append(b, s...)
 }
 
-func (e Encoder) AppendTagBytes(b []byte, tag Tag, s []byte) []byte {
+func (e Emitter) AppendTagBytes(b []byte, tag Tag, s []byte) []byte {
 	b = e.AppendTag(b, tag, len(s))
 	return append(b, s...)
 }
 
-func (e Encoder) AppendInt(b []byte, v int) []byte {
+func (e Emitter) AppendInt(b []byte, v int) []byte {
 	if v < 0 {
 		return e.AppendTag64(b, Neg, uint64(-v)-1)
 	}
@@ -92,11 +92,11 @@ func (e Encoder) AppendInt(b []byte, v int) []byte {
 	return e.AppendTag64(b, Int, uint64(v))
 }
 
-func (e Encoder) AppendUint(b []byte, v uint) []byte {
+func (e Emitter) AppendUint(b []byte, v uint) []byte {
 	return e.AppendTag64(b, Int, uint64(v))
 }
 
-func (e Encoder) AppendInt64(b []byte, v int64) []byte {
+func (e Emitter) AppendInt64(b []byte, v int64) []byte {
 	if v < 0 {
 		return e.AppendTag64(b, Neg, uint64(-v)-1)
 	}
@@ -104,15 +104,15 @@ func (e Encoder) AppendInt64(b []byte, v int64) []byte {
 	return e.AppendTag64(b, Int, uint64(v))
 }
 
-func (e Encoder) AppendUint64(b []byte, v uint64) []byte {
+func (e Emitter) AppendUint64(b []byte, v uint64) []byte {
 	return e.AppendTag64(b, Int, v)
 }
 
-func (e Encoder) AppendNegUint64(b []byte, v uint64) []byte {
+func (e Emitter) AppendNegUint64(b []byte, v uint64) []byte {
 	return e.AppendTag64(b, Neg, v-1)
 }
 
-func (e Encoder) AppendTagUnsigned(b []byte, tag Tag, v uint64) []byte {
+func (e Emitter) AppendTagUnsigned(b []byte, tag Tag, v uint64) []byte {
 	if tag == Neg {
 		return e.AppendTag64(b, Neg, v-1)
 	} else {
@@ -120,7 +120,7 @@ func (e Encoder) AppendTagUnsigned(b []byte, tag Tag, v uint64) []byte {
 	}
 }
 
-func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
+func (e Emitter) AppendFloat32(b []byte, v float32) []byte {
 	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float32(q) == v {
 			return append(b, byte(Simple|Float8), byte(q))
@@ -130,7 +130,7 @@ func (e Encoder) AppendFloat32(b []byte, v float32) []byte {
 	return e.appendFloat32(b, v)
 }
 
-func (e Encoder) AppendFloat(b []byte, v float64) []byte {
+func (e Emitter) AppendFloat(b []byte, v float64) []byte {
 	if e.Flags.Is(FtFloat8Int) {
 		if q := int8(v); float64(q) == v {
 			return append(b, byte(Simple|Float8), byte(q))
@@ -146,7 +146,7 @@ func (e Encoder) AppendFloat(b []byte, v float64) []byte {
 	return append(b, byte(Simple|Float64), byte(r>>56), byte(r>>48), byte(r>>40), byte(r>>32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
-func (e Encoder) appendFloat32(b []byte, v float32) []byte {
+func (e Emitter) appendFloat32(b []byte, v float32) []byte {
 	r := math.Float32bits(v)
 
 	if e.Flags.Is(FtFloat16) {
@@ -158,7 +158,7 @@ func (e Encoder) appendFloat32(b []byte, v float32) []byte {
 	return append(b, byte(Simple|Float32), byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
-func (e Encoder) appendFloat16(b []byte, r uint32) ([]byte, bool) {
+func (e Emitter) appendFloat16(b []byte, r uint32) ([]byte, bool) {
 	const (
 		// 1 + 8 + 23
 		sig  = 0b1_00000000_00000000000000000000000
@@ -195,7 +195,7 @@ func (e Encoder) appendFloat16(b []byte, r uint32) ([]byte, bool) {
 	return append(b, byte(Simple|Float16), byte(r16>>8), byte(r16)), true
 }
 
-func (e Encoder) AppendTag(b []byte, tag Tag, v int) []byte {
+func (e Emitter) AppendTag(b []byte, tag Tag, v int) []byte {
 	switch {
 	case v == -1:
 		return append(b, byte(tag|LenBreak))
@@ -212,7 +212,7 @@ func (e Encoder) AppendTag(b []byte, tag Tag, v int) []byte {
 	}
 }
 
-func (e Encoder) AppendTag64(b []byte, tag Tag, v uint64) []byte {
+func (e Emitter) AppendTag64(b []byte, tag Tag, v uint64) []byte {
 	switch {
 	case v < Len1:
 		return append(b, byte(tag)|byte(v))
@@ -227,19 +227,19 @@ func (e Encoder) AppendTag64(b []byte, tag Tag, v uint64) []byte {
 	}
 }
 
-func (e Encoder) AppendTagBreak(b []byte, tag Tag) []byte {
+func (e Emitter) AppendTagBreak(b []byte, tag Tag) []byte {
 	return append(b, byte(tag|LenBreak))
 }
 
-func (e Encoder) AppendLabel(b []byte, x int) []byte {
+func (e Emitter) AppendLabel(b []byte, x int) []byte {
 	return e.AppendTag(b, Label, x)
 }
 
-func (e Encoder) AppendSimple(b []byte, x int) []byte {
+func (e Emitter) AppendSimple(b []byte, x int) []byte {
 	return append(b, byte(Simple)|byte(x))
 }
 
-func (e Encoder) AppendBool(b []byte, v bool) []byte {
+func (e Emitter) AppendBool(b []byte, v bool) []byte {
 	var x Tag
 
 	if v {
@@ -251,23 +251,23 @@ func (e Encoder) AppendBool(b []byte, v bool) []byte {
 	return append(b, byte(x))
 }
 
-func (e Encoder) AppendNull(b []byte) []byte {
+func (e Emitter) AppendNull(b []byte) []byte {
 	return append(b, byte(Simple|Null))
 }
 
-func (e Encoder) AppendUndefined(b []byte) []byte {
+func (e Emitter) AppendUndefined(b []byte) []byte {
 	return append(b, byte(Simple|Undefined))
 }
 
-func (e Encoder) AppendNone(b []byte) []byte {
+func (e Emitter) AppendNone(b []byte) []byte {
 	return append(b, byte(Simple|None))
 }
 
-func (e Encoder) AppendBreak(b []byte) []byte {
+func (e Emitter) AppendBreak(b []byte) []byte {
 	return append(b, byte(Simple|Break))
 }
 
-func (e Encoder) TagSize(v int) int {
+func (e Emitter) TagSize(v int) int {
 	switch {
 	case v == -1:
 		return 1
@@ -284,7 +284,7 @@ func (e Encoder) TagSize(v int) int {
 	}
 }
 
-func (e Encoder) Tag64Size(v int64) int {
+func (e Emitter) Tag64Size(v int64) int {
 	switch {
 	case v < Len1:
 		return 1

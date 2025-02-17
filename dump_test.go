@@ -3,7 +3,7 @@ package cbor
 import "testing"
 
 func TestDump(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var b []byte
 
 	b = e.AppendArray(b, -1)

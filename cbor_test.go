@@ -7,7 +7,7 @@ import (
 )
 
 func TestInt(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 
@@ -81,7 +81,7 @@ func TestInt(tb *testing.T) {
 }
 
 func TestNeg(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int
@@ -152,7 +152,7 @@ func TestNeg(tb *testing.T) {
 }
 
 func TestFloat(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int
@@ -230,7 +230,7 @@ func TestFloat(tb *testing.T) {
 }
 
 func TestSimple(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 
@@ -279,7 +279,7 @@ func TestSimple(tb *testing.T) {
 }
 
 func TestString(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b, v []byte
 	var i int
@@ -314,7 +314,7 @@ func TestString(tb *testing.T) {
 }
 
 func TestArray(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int
@@ -370,7 +370,7 @@ func TestArray(tb *testing.T) {
 }
 
 func TestMap(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int
@@ -436,7 +436,7 @@ func TestMap(tb *testing.T) {
 }
 
 func TestBreak(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int
@@ -567,7 +567,7 @@ func TestBreak(tb *testing.T) {
 }
 
 func TestLabeled(tb *testing.T) {
-	var e Encoder
+	var e Emitter
 	var d Iterator
 	var b []byte
 	var i int

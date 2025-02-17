@@ -8,7 +8,7 @@ type (
 	}
 )
 
-func MakeDecoder() Iterator { return Iterator{Flags: FtDefault} }
+func MakeIterator() Iterator { return Iterator{Flags: FtDefault} }
 
 func (d Iterator) Skip(b []byte, st int) (i int) {
 	_, _, i = d.SkipTag(b, st)
