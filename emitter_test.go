@@ -7,7 +7,7 @@ import (
 
 func TestEncoderInsertLen(tb *testing.T) {
 	var e Encoder
-	var d Decoder
+	var d Iterator
 	var b []byte
 	var i int
 

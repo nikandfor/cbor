@@ -27,7 +27,7 @@ func Dump(r []byte) (s string) {
 
 func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 	const spaces = "                                          "
-	var d Decoder
+	var d Iterator
 
 	tag, sub, i := d.Tag(r, st)
 

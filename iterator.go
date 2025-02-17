@@ -3,19 +3,19 @@ package cbor
 import "math"
 
 type (
-	Decoder struct {
+	Iterator struct {
 		Flags FeatureFlags
 	}
 )
 
-func MakeDecoder() Decoder { return Decoder{Flags: FtDefault} }
+func MakeDecoder() Iterator { return Iterator{Flags: FtDefault} }
 
-func (d Decoder) Skip(b []byte, st int) (i int) {
+func (d Iterator) Skip(b []byte, st int) (i int) {
 	_, _, i = d.SkipTag(b, st)
 	return
 }
 
-func (d Decoder) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
+func (d Iterator) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
 	tag, sub, i = d.Tag(b, st)
 
 	//	println(fmt.Sprintf("Skip %x  tag %x %x  i %x  data % x", st, tag, sub, i, b[st:]))
@@ -47,13 +47,13 @@ func (d Decoder) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
 	return
 }
 
-func (d Decoder) Raw(b []byte, st int) ([]byte, int) {
+func (d Iterator) Raw(b []byte, st int) ([]byte, int) {
 	i := d.Skip(b, st)
 
 	return b[st:i], i
 }
 
-func (d Decoder) Break(b []byte, i *int) bool {
+func (d Iterator) Break(b []byte, i *int) bool {
 	if Tag(b[*i]) != Simple|Break {
 		return false
 	}
@@ -63,26 +63,26 @@ func (d Decoder) Break(b []byte, i *int) bool {
 	return true
 }
 
-func (d Decoder) Bytes(b []byte, st int) (v []byte, i int) {
+func (d Iterator) Bytes(b []byte, st int) (v []byte, i int) {
 	_, l, i := d.Tag(b, st)
 
 	return b[i : i+int(l)], i + int(l)
 }
 
-func (d Decoder) Label(b []byte, st int) (lab, i int) {
+func (d Iterator) Label(b []byte, st int) (lab, i int) {
 	_, sub, i := d.Tag(b, st)
 	return int(sub), i
 }
 
-func (d Decoder) TagOnly(b []byte, st int) (tag Tag) {
+func (d Iterator) TagOnly(b []byte, st int) (tag Tag) {
 	return Tag(b[st]) & TagMask
 }
 
-func (d Decoder) TagRaw(b []byte, st int) (tag Tag) {
+func (d Iterator) TagRaw(b []byte, st int) (tag Tag) {
 	return Tag(b[st])
 }
 
-func (d Decoder) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
+func (d Iterator) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
 	i = st
 
 	tag = Tag(b[i]) & TagMask
@@ -121,24 +121,24 @@ func (d Decoder) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
 	return
 }
 
-func (d Decoder) u8(b []byte, i int) uint64 {
+func (d Iterator) u8(b []byte, i int) uint64 {
 	return uint64(b[i])
 }
 
-func (d Decoder) u16(b []byte, i int) uint64 {
+func (d Iterator) u16(b []byte, i int) uint64 {
 	return uint64(b[i])<<8 | uint64(b[i+1])
 }
 
-func (d Decoder) u32(b []byte, i int) uint64 {
+func (d Iterator) u32(b []byte, i int) uint64 {
 	return uint64(b[i])<<24 | uint64(b[i+1])<<16 | uint64(b[i+2])<<8 | uint64(b[i+3])
 }
 
-func (d Decoder) u64(b []byte, i int) uint64 {
+func (d Iterator) u64(b []byte, i int) uint64 {
 	return uint64(b[i])<<56 | uint64(b[i+1])<<48 | uint64(b[i+2])<<40 | uint64(b[i+3])<<32 |
 		uint64(b[i+4])<<24 | uint64(b[i+5])<<16 | uint64(b[i+6])<<8 | uint64(b[i+7])
 }
 
-func (d Decoder) Signed(b []byte, st int) (v int64, i int) {
+func (d Iterator) Signed(b []byte, st int) (v int64, i int) {
 	tag, v, i := d.Tag(b, st)
 	if tag == Neg {
 		v++
@@ -148,7 +148,7 @@ func (d Decoder) Signed(b []byte, st int) (v int64, i int) {
 	return v, i
 }
 
-func (d Decoder) Unsigned(b []byte, st int) (v uint64, i int) {
+func (d Iterator) Unsigned(b []byte, st int) (v uint64, i int) {
 	tag, x, i := d.Tag(b, st)
 	if tag == Neg {
 		x++
@@ -157,7 +157,7 @@ func (d Decoder) Unsigned(b []byte, st int) (v uint64, i int) {
 	return uint64(x), i
 }
 
-func (d Decoder) Float32(b []byte, st int) (v float32, i int) {
+func (d Iterator) Float32(b []byte, st int) (v float32, i int) {
 	i = st
 
 	sub := b[i] & SubMask
@@ -181,7 +181,7 @@ func (d Decoder) Float32(b []byte, st int) (v float32, i int) {
 	return v, i
 }
 
-func (d Decoder) Float(b []byte, st int) (v float64, i int) {
+func (d Iterator) Float(b []byte, st int) (v float64, i int) {
 	i = st
 
 	sub := b[i] & SubMask
@@ -205,7 +205,7 @@ func (d Decoder) Float(b []byte, st int) (v float64, i int) {
 	return v, i
 }
 
-func (d Decoder) float16(b []byte, i int) float32 {
+func (d Iterator) float16(b []byte, i int) float32 {
 	const sig = 0b1_00000_0000000000
 	const exp = 0b0_11111_0000000000
 	const man = 0b0_00000_1111111111
