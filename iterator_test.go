@@ -25,7 +25,8 @@ func TestIteratorSkipNeg(tb *testing.T) {
 	var d Iterator
 
 	st := 0x5
-	tag, sub, i := d.SkipTag(b, st)
+	tag, _, i := d.SkipTag(b, st)
+	sub := d.Simple(b, st)
 	if tag != Simple || sub != Float32 || i != st+5 {
 		tb.Errorf("%x -> %x %x %x", st, tag, sub, i)
 	}

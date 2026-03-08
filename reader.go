@@ -88,7 +88,7 @@ func (r *Reader) skipRead() (end int, err error) {
 }
 
 func (r *Reader) skip(st int) (i int) {
-	tag, sub, i := readTag(r.b, st)
+	tag, l, i := readTag(r.b, st)
 	//	println("tag", st, tag, sub, i)
 	if i < 0 {
 		return r.newError(-i, st)
@@ -98,13 +98,13 @@ func (r *Reader) skip(st int) (i int) {
 	case Int, Neg:
 		// already read
 	case Bytes, String:
-		i += int(sub)
+		i += int(l)
 	case Array, Map:
-		for el := 0; sub == -1 || el < int(sub); el++ {
+		for el := 0; l == -1 || el < int(l); el++ {
 			if i == len(r.b) {
 				return r.newError(ErrUnexpectedEOF, i)
 			}
-			if sub == -1 && r.b[i] == byte(Simple|Break) {
+			if l == -1 && r.b[i] == byte(Simple|Break) {
 				i++
 				break
 			}
@@ -124,7 +124,7 @@ func (r *Reader) skip(st int) (i int) {
 	case Label:
 		return r.skip(i)
 	case Simple:
-		switch sub {
+		switch Tag(r.b[st]) & SubMask {
 		case False,
 			True,
 			Null,
@@ -178,15 +178,15 @@ func (r *Reader) more() (err error) {
 	return err
 }
 
-func readTag(b []byte, st int) (tag Tag, sub int64, i int) {
+func readTag(b []byte, st int) (tag Tag, l int64, i int) {
 	if st >= len(b) {
-		return tag, sub, -ErrUnexpectedEOF
+		return tag, l, -ErrUnexpectedEOF
 	}
 
 	i = st
 
 	tag = Tag(b[i]) & TagMask
-	sub = int64(b[i] & SubMask)
+	sub := Tag(b[i]) & SubMask
 	i++
 
 	if tag == Simple {
@@ -194,46 +194,46 @@ func readTag(b []byte, st int) (tag Tag, sub int64, i int) {
 	}
 
 	if sub < Len1 {
-		return
+		return tag, int64(sub), i
 	}
 
 	switch sub {
 	case LenBreak:
-		sub = -1
+		l = -1
 	case Len1:
 		if i+1 > len(b) {
-			return tag, sub, -ErrUnexpectedEOF
+			return tag, l, -ErrUnexpectedEOF
 		}
 
-		sub = int64(b[i])
+		l = int64(b[i])
 		i++
 	case Len2:
 		if i+2 > len(b) {
-			return tag, sub, -ErrUnexpectedEOF
+			return tag, l, -ErrUnexpectedEOF
 		}
 
-		sub = int64(b[i])<<8 | int64(b[i+1])
+		l = int64(b[i])<<8 | int64(b[i+1])
 		i += 2
 	case Len4:
 		if i+4 > len(b) {
-			return tag, sub, -ErrUnexpectedEOF
+			return tag, l, -ErrUnexpectedEOF
 		}
 
-		sub = int64(b[i])<<24 | int64(b[i+1])<<16 | int64(b[i+2])<<8 | int64(b[i+3])
+		l = int64(b[i])<<24 | int64(b[i+1])<<16 | int64(b[i+2])<<8 | int64(b[i+3])
 		i += 4
 	case Len8:
 		if i+8 > len(b) {
-			return tag, sub, -ErrUnexpectedEOF
+			return tag, l, -ErrUnexpectedEOF
 		}
 
-		sub = int64(b[i])<<56 | int64(b[i+1])<<48 | int64(b[i+2])<<40 | int64(b[i+3])<<32 |
+		l = int64(b[i])<<56 | int64(b[i+1])<<48 | int64(b[i+2])<<40 | int64(b[i+3])<<32 |
 			int64(b[i+4])<<24 | int64(b[i+5])<<16 | int64(b[i+6])<<8 | int64(b[i+7])
 		i += 8
 	default:
-		return tag, sub, -ErrMalformed
+		return tag, l, -ErrMalformed
 	}
 
-	return tag, sub, i
+	return tag, l, i
 }
 
 func (r *Reader) newError(code, index int) int {

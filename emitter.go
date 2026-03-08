@@ -199,7 +199,7 @@ func (e Emitter) AppendTag(b []byte, tag Tag, v int) []byte {
 	switch {
 	case v == -1:
 		return append(b, byte(tag|LenBreak))
-	case v < Len1:
+	case v < int(Len1):
 		return append(b, byte(tag)|byte(v))
 	case v <= 0xff:
 		return append(b, byte(tag|Len1), byte(v))
@@ -214,7 +214,7 @@ func (e Emitter) AppendTag(b []byte, tag Tag, v int) []byte {
 
 func (e Emitter) AppendTag64(b []byte, tag Tag, v uint64) []byte {
 	switch {
-	case v < Len1:
+	case v < uint64(Len1):
 		return append(b, byte(tag)|byte(v))
 	case v <= 0xff:
 		return append(b, byte(tag|Len1), byte(v))
@@ -235,7 +235,7 @@ func (e Emitter) AppendLabel(b []byte, x int) []byte {
 	return e.AppendTag(b, Label, x)
 }
 
-func (e Emitter) AppendSimple(b []byte, x int) []byte {
+func (e Emitter) AppendSimple(b []byte, x Tag) []byte {
 	return append(b, byte(Simple)|byte(x))
 }
 
@@ -271,7 +271,7 @@ func (e Emitter) TagSize(v int) int {
 	switch {
 	case v == -1:
 		return 1
-	case v < Len1:
+	case v < int(Len1):
 		return 1
 	case v <= 0xff:
 		return 1 + 1
@@ -286,7 +286,7 @@ func (e Emitter) TagSize(v int) int {
 
 func (e Emitter) Tag64Size(v int64) int {
 	switch {
-	case v < Len1:
+	case v < int64(Len1):
 		return 1
 	case v <= 0xff:
 		return 1 + 1

@@ -253,12 +253,11 @@ func TestSimple(tb *testing.T) {
 	}
 
 	var tag Tag
-	var arg int64
 
 	i := 0
 
 	for j, tc := range []struct {
-		Simple int64
+		Simple Tag
 	}{
 		{Simple: False},
 		{Simple: True},
@@ -267,7 +266,8 @@ func TestSimple(tb *testing.T) {
 		{Simple: None},
 		{Simple: 16},
 	} {
-		tag, arg, i = d.Tag(b, i)
+		arg := d.Simple(b, i)
+		tag, _, i = d.Tag(b, i)
 		if tag != Simple || arg != tc.Simple {
 			tb.Errorf("j %d: %x %x", j, tag, arg)
 		}

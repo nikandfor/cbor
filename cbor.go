@@ -1,5 +1,7 @@
 package cbor
 
+import "fmt"
+
 type (
 	Tag byte
 
@@ -24,16 +26,16 @@ const (
 )
 
 const (
-	Len1 = 24 + iota
+	Len1 Tag = 24 + iota
 	Len2
 	Len4
 	Len8
 
-	LenBreak = Break
+	LenBreak Tag = Break
 )
 
 const (
-	False = 20 + iota
+	False Tag = 20 + iota
 	True
 	Null
 	Undefined
@@ -43,10 +45,14 @@ const (
 	Float32
 	Float64
 
-	None = 0
+	None Tag = 0
 
-	Break = 31
+	Break Tag = 31
 )
+
+func IsBool(raw Tag) bool {
+	return raw == Simple|False || raw == Simple|True
+}
 
 func IsNum(raw Tag) bool {
 	return IsInt(raw) || IsFloat(raw)
@@ -59,4 +65,39 @@ func IsInt(tag Tag) bool {
 
 func IsFloat(raw Tag) bool {
 	return raw >= Simple|Float8 && raw <= Simple|Float64
+}
+
+func (t Tag) String() string {
+	switch t & TagMask {
+	case Int, Neg:
+		return "int"
+	case Bytes:
+		return "bytes"
+	case String:
+		return "string"
+	case Array:
+		return "array"
+	case Map:
+		return "map"
+	case Label:
+		return "labelled"
+	case Simple:
+	}
+
+	switch t & SubMask {
+	case False, True:
+		return "bool"
+	case Null:
+		return "null"
+	case Undefined:
+		return "undefined"
+	case Float8, Float16, Float32, Float64:
+		return "float"
+	case None:
+		return "none"
+	case Break:
+		return "break"
+	default:
+		return fmt.Sprintf("%x", int(t))
+	}
 }

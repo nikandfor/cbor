@@ -23,6 +23,7 @@ var errStrings = []string{
 	"short buffer",
 	"malformed",
 	"unexpected eof",
+	"overflow",
 }
 
 func newError(code, index int) int {

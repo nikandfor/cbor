@@ -82,11 +82,11 @@ func (d Iterator) TagRaw(b []byte, st int) (tag Tag) {
 	return Tag(b[st])
 }
 
-func (d Iterator) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
+func (d Iterator) Tag(b []byte, st int) (tag Tag, l int64, i int) {
 	i = st
 
 	tag = Tag(b[i]) & TagMask
-	sub = int64(b[i] & SubMask)
+	sub := Tag(b[i]) & SubMask
 	i++
 
 	if tag == Simple {
@@ -94,28 +94,28 @@ func (d Iterator) Tag(b []byte, st int) (tag Tag, sub int64, i int) {
 			i += 1 << (sub - Float8)
 		}
 
-		return tag, sub, i
+		return tag, 0, i
 	}
 
 	switch {
 	case sub < Len1:
-		// we are ok
+		l = int64(sub)
 	case sub == LenBreak:
-		sub = -1
+		l = -1
 	case sub == Len1:
-		sub = int64(d.u8(b, i))
+		l = int64(d.u8(b, i))
 		i++
 	case sub == Len2:
-		sub = int64(d.u16(b, i))
+		l = int64(d.u16(b, i))
 		i += 2
 	case sub == Len4:
-		sub = int64(d.u32(b, i))
+		l = int64(d.u32(b, i))
 		i += 4
 	case sub == Len8:
-		sub = int64(d.u64(b, i))
+		l = int64(d.u64(b, i))
 		i += 8
 	default:
-		return tag, sub, newError(ErrMalformed, st)
+		return tag, 0, newError(ErrMalformed, st)
 	}
 
 	return
@@ -136,6 +136,10 @@ func (d Iterator) u32(b []byte, i int) uint64 {
 func (d Iterator) u64(b []byte, i int) uint64 {
 	return uint64(b[i])<<56 | uint64(b[i+1])<<48 | uint64(b[i+2])<<40 | uint64(b[i+3])<<32 |
 		uint64(b[i+4])<<24 | uint64(b[i+5])<<16 | uint64(b[i+6])<<8 | uint64(b[i+7])
+}
+
+func (d Iterator) Simple(b []byte, st int) Tag {
+	return Tag(b[st]) & SubMask
 }
 
 func (d Iterator) Signed(b []byte, st int) (v int64, i int) {
@@ -160,7 +164,7 @@ func (d Iterator) Unsigned(b []byte, st int) (v uint64, i int) {
 func (d Iterator) Float32(b []byte, st int) (v float32, i int) {
 	i = st
 
-	sub := b[i] & SubMask
+	sub := Tag(b[i]) & SubMask
 	i++
 
 	switch sub {
@@ -184,7 +188,7 @@ func (d Iterator) Float32(b []byte, st int) (v float32, i int) {
 func (d Iterator) Float(b []byte, st int) (v float64, i int) {
 	i = st
 
-	sub := b[i] & SubMask
+	sub := Tag(b[i]) & SubMask
 	i++
 
 	switch sub {

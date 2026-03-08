@@ -29,7 +29,7 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 	const spaces = "                                          "
 	var d Iterator
 
-	tag, sub, i := d.Tag(r, st)
+	tag, l, i := d.Tag(r, st)
 
 	w = fmt.Appendf(w, "%4x%s  ", st, spaces[:2*depth])
 
@@ -39,7 +39,7 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 
 		w = fmt.Appendf(w, "% x  %s%d\n", r[st:i], csel(tag == Neg, "-", ""), v)
 	case Bytes, String:
-		if sub >= 0 {
+		if l >= 0 {
 			var v []byte
 			v, i = d.Bytes(r, st)
 			w = fmt.Appendf(w, "% x  %q\n", r[st:i], v)
@@ -48,7 +48,7 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 
 		w = fmt.Appendf(w, "% x\n", r[st:i])
 
-		l := int(sub)
+		l := int(l)
 
 		for j := 0; l < 0 || j < l; j++ {
 			if l < 0 && d.Break(r, &i) {
@@ -59,9 +59,9 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 			w, i = dump(w, r, i, depth+1)
 		}
 	case Array, Map:
-		w = fmt.Appendf(w, "% x  %x\n", r[st:i], sub)
+		w = fmt.Appendf(w, "% x  %x\n", r[st:i], l)
 
-		l := int(sub)
+		l := int(l)
 
 		for j := 0; l < 0 || j < l; j++ {
 			if l < 0 && d.Break(r, &i) {
@@ -79,8 +79,8 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 		w = fmt.Appendf(w, "% x\n", r[st:i])
 		w, i = dump(w, r, i, depth+1)
 	case Simple:
-		switch {
-		case sub < 0:
+		switch sub := d.Simple(r, st); true {
+		case sub == Break:
 			w = fmt.Appendf(w, "% x  break\n", r[st:i])
 		case sub < Float8:
 			v := []string{
@@ -89,7 +89,8 @@ func dump(w, r []byte, st, depth int) (_ []byte, i1 int) {
 				True:      "true",
 				Null:      "null",
 				Undefined: "undefined",
-				Float8:    "",
+
+				Float8: "",
 			}[sub]
 
 			w = fmt.Appendf(w, "% x  %v\n", r[st:i], v)
