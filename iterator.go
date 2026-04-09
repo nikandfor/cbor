@@ -74,6 +74,19 @@ func (d Iterator) Label(b []byte, st int) (lab, i int) {
 	return int(sub), i
 }
 
+func (d Iterator) UnwrapLabels(b []byte, st int) (i int) {
+	i = st
+
+	for {
+		tag, _, end := d.Tag(b, i)
+		if tag != Label {
+			return i
+		}
+
+		i = end
+	}
+}
+
 func (d Iterator) TagOnly(b []byte, st int) (tag Tag) {
 	return Tag(b[st]) & TagMask
 }

@@ -17,6 +17,19 @@ func TestIterator(tb *testing.T) {
 	}
 }
 
+func TestIteratorUnwrapLabels(tb *testing.T) {
+	var d Iterator
+
+	b := []byte{byte(Label) | 1, byte(Label) | 2, byte(Simple | True)}
+
+	i := d.UnwrapLabels(b, 0)
+	if i > 0 {
+		tb.Logf("got expected err: %v", Error(i))
+	} else if i != 2 {
+		tb.Logf("got %d, expected to iter to index 2", i)
+	}
+}
+
 func TestIteratorSkipNeg(tb *testing.T) {
 	b := []byte{
 		0x72, 0x74, 0x79, 0x05, 0x24, 0xfa, 0x3f, 0x80, 0x00, 0x00, 0xfa, 0xbf, 0x80, 0x00, 0x00, 0x8d,
