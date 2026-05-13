@@ -49,6 +49,9 @@ func (d Iterator) SkipTag(b []byte, st int) (tag Tag, sub int64, i int) {
 
 func (d Iterator) Raw(b []byte, st int) ([]byte, int) {
 	i := d.Skip(b, st)
+	if i < 0 {
+		return nil, i
+	}
 
 	return b[st:i], i
 }
@@ -64,13 +67,26 @@ func (d Iterator) Break(b []byte, i *int) bool {
 }
 
 func (d Iterator) Bytes(b []byte, st int) (v []byte, i int) {
-	_, l, i := d.Tag(b, st)
+	tag, l, i := d.Tag(b, st)
+	if i < 0 {
+		return nil, i
+	}
+	if tag != Bytes && tag != String || l < 0 {
+		return nil, newError(ErrIncompatible, st)
+	}
 
 	return b[i : i+int(l)], i + int(l)
 }
 
 func (d Iterator) Label(b []byte, st int) (lab, i int) {
-	_, sub, i := d.Tag(b, st)
+	tag, sub, i := d.Tag(b, st)
+	if i < 0 {
+		return 0, i
+	}
+	if tag != Label {
+		return 0, newError(ErrIncompatible, st)
+	}
+
 	return int(sub), i
 }
 
@@ -79,6 +95,9 @@ func (d Iterator) UnwrapLabels(b []byte, st int) (i int) {
 
 	for {
 		tag, _, end := d.Tag(b, i)
+		if end < 0 {
+			return end
+		}
 		if tag != Label {
 			return i
 		}
@@ -102,9 +121,15 @@ func (d Iterator) Tag(b []byte, st int) (tag Tag, l int64, i int) {
 	sub := Tag(b[i]) & SubMask
 	i++
 
+	size := d.valsize(sub)
+
+	if i+size > len(b) {
+		return tag, 0, newError(ErrShortBuffer, st)
+	}
+
 	if tag == Simple {
 		if sub >= Float8 && sub <= Float64 {
-			i += 1 << (sub - Float8)
+			i += size
 		}
 
 		return tag, 0, i
@@ -134,6 +159,14 @@ func (d Iterator) Tag(b []byte, st int) (tag Tag, l int64, i int) {
 	return
 }
 
+func (d Iterator) valsize(sub Tag) int {
+	if sub < Len1 || sub > Len8 {
+		return 0
+	}
+
+	return 1 << (sub - Len1)
+}
+
 func (d Iterator) u8(b []byte, i int) uint64 {
 	return uint64(b[i])
 }
@@ -157,6 +190,12 @@ func (d Iterator) Simple(b []byte, st int) Tag {
 
 func (d Iterator) Signed(b []byte, st int) (v int64, i int) {
 	tag, v, i := d.Tag(b, st)
+	if i < 0 {
+		return 0, i
+	}
+	if tag != Int && tag != Neg {
+		return 0, newError(ErrIncompatible, st)
+	}
 	if tag == Neg {
 		v++
 		v = -v
@@ -167,6 +206,12 @@ func (d Iterator) Signed(b []byte, st int) (v int64, i int) {
 
 func (d Iterator) Unsigned(b []byte, st int) (v uint64, i int) {
 	tag, x, i := d.Tag(b, st)
+	if i < 0 {
+		return 0, i
+	}
+	if tag != Int && tag != Neg {
+		return 0, newError(ErrIncompatible, st)
+	}
 	if tag == Neg {
 		x++
 	}
@@ -177,8 +222,18 @@ func (d Iterator) Unsigned(b []byte, st int) (v uint64, i int) {
 func (d Iterator) Float32(b []byte, st int) (v float32, i int) {
 	i = st
 
+	tag := Tag(b[i]) & TagMask
 	sub := Tag(b[i]) & SubMask
 	i++
+
+	if tag != Simple || sub < Float8 || sub > Float64 {
+		return 0, newError(ErrIncompatible, st)
+	}
+
+	size := d.valsize(sub)
+	if i+size > len(b) {
+		return 0, newError(ErrShortBuffer, st)
+	}
 
 	switch sub {
 	case Float8:
@@ -201,8 +256,18 @@ func (d Iterator) Float32(b []byte, st int) (v float32, i int) {
 func (d Iterator) Float(b []byte, st int) (v float64, i int) {
 	i = st
 
+	tag := Tag(b[i]) & TagMask
 	sub := Tag(b[i]) & SubMask
 	i++
+
+	if tag != Simple || sub < Float8 || sub > Float64 {
+		return 0, newError(ErrIncompatible, st)
+	}
+
+	size := d.valsize(sub)
+	if i+size > len(b) {
+		return 0, newError(ErrShortBuffer, st)
+	}
 
 	switch sub {
 	case Float8:

@@ -9,6 +9,7 @@ type Error int
 const (
 	ErrOK = iota
 	ErrShortBuffer
+	ErrIncompatible
 	ErrMalformed
 	ErrUnexpectedEOF
 	ErrOverflow
@@ -21,6 +22,7 @@ const (
 var errStrings = []string{
 	"ok",
 	"short buffer",
+	"incompatible type",
 	"malformed",
 	"unexpected eof",
 	"overflow",
